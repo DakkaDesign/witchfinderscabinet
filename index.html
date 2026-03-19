@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Witchfinder's Cabinet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C8A84B;
+    --gold-light: #E8CC7A;
+    --gold-dim: #7A6020;
+    --ink: #080806;
+    --ink2: #100F0A;
+    --ink3: #1C1B14;
+    --parchment: #EDE0C4;
+    --parchment-dim: #A08860;
+    --parchment-faint: #2A2518;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'EB Garamond', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Animated botanical background */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-layer svg {
+    width: 100%;
+    height: 100%;
+    opacity: 0.04;
+  }
+
+  /* Vignette */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Grain */
+  .grain {
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.5;
+  }
+
+  /* Main wrapper */
+  .wrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 520px;
+    padding: 60px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Header ornament */
+  .ornament {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin-bottom: 32px;
+    position: relative;
+    animation: fadeIn 1s ease both;
+  }
+  .ornament::before {
+    content: '✦';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--gold-dim);
+    font-size: 0.6rem;
+    background: var(--ink);
+    padding: 0 8px;
+  }
+
+  /* Logo area */
+  .logo-area {
+    text-align: center;
+    margin-bottom: 12px;
+    animation: fadeIn 0.8s 0.1s ease both;
+  }
+
+  .logo-eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 14px;
+  }
+
+  .logo-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--gold);
+    line-height: 1.1;
+    letter-spacing: 0.03em;
+  }
+
+  .logo-subtitle {
+    font-size: 0.85rem;
+    color: var(--parchment-dim);
+    margin-top: 10px;
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+
+  /* Divider */
+  .divider {
+    width: 200px;
+    margin: 28px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.8s 0.2s ease both;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--gold-dim); opacity: 0.4; }
+  .divider-glyph { color: var(--gold-dim); font-size: 0.7rem; opacity: 0.6; }
+
+  /* Section label */
+  .section-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--parchment-dim);
+    margin-bottom: 20px;
+    opacity: 0.7;
+    animation: fadeIn 0.8s 0.25s ease both;
+  }
+
+  /* Cards */
+  .cards {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .card {
+    width: 100%;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+    background: var(--ink2);
+    border: 1px solid #2A2820;
+    border-top-color: #3A3620;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,168,75,0.06) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, var(--gold), transparent);
+    transform: scaleY(0);
+    transition: transform 0.35s ease;
+    transform-origin: center;
+  }
+
+  .card:hover {
+    border-color: var(--gold-dim);
+    transform: translateX(4px);
+    box-shadow: -4px 0 20px rgba(200,168,75,0.08), inset 0 1px 0 rgba(200,168,75,0.1);
+  }
+
+  .card:hover::before { opacity: 1; }
+  .card:hover::after { transform: scaleY(1); }
+
+  .card:nth-child(1) { animation: slideIn 0.6s 0.3s ease both; }
+  .card:nth-child(2) { animation: slideIn 0.6s 0.42s ease both; }
+  .card:nth-child(3) { animation: slideIn 0.6s 0.54s ease both; }
+
+  /* Card icon */
+  .card-icon {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    background: var(--parchment-faint);
+    transition: all 0.35s ease;
+  }
+
+  .card:hover .card-icon {
+    border-color: var(--gold);
+    background: rgba(200,168,75,0.12);
+  }
+
+  /* Card text */
+  .card-text { flex: 1; }
+
+  .card-platform {
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+
+  .card:hover .card-platform { color: var(--gold); }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--parchment);
+    margin-bottom: 3px;
+    transition: color 0.3s;
+  }
+
+  .card:hover .card-title { color: var(--gold-light); }
+
+  .card-desc {
+    font-size: 0.78rem;
+    color: var(--parchment-dim);
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  /* Card badge */
+  .card-badge {
+    font-size: 0.48rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover .card-badge { opacity: 1; }
+
+  .badge-digital { color: var(--gold); border-color: var(--gold-dim); }
+  .badge-print   { color: #8AB4A0; border-color: #4A7060; }
+  .badge-support { color: #C08878; border-color: #7A5040; }
+
+  /* Arrow */
+  .card-arrow {
+    color: var(--gold-dim);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    opacity: 0;
+  }
+  .card:hover .card-arrow { opacity: 1; transform: translateX(4px); }
+
+  /* Ko-fi note */
+  .kofi-note {
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, rgba(192,136,120,0.08) 0%, transparent 100%);
+    border: 1px solid rgba(192,136,120,0.2);
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--parchment-dim);
+    line-height: 1.7;
+    text-align: center;
+    animation: fadeIn 0.8s 0.7s ease both;
+  }
+
+  .kofi-note strong {
+    color: #C08878;
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  /* Footer divider */
+  .footer-ornament {
+    margin: 36px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 280px;
+    animation: fadeIn 0.8s 0.8s ease both;
+  }
+  .footer-ornament-line { flex: 1; height: 1px; background: #2A2820; }
+  .footer-ornament-text { font-size: 0.5rem; letter-spacing: 0.3em; color: #3A3820; text-transform: uppercase; }
+
+  .footer-text {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: #3A3820;
+    text-align: center;
+    text-transform: uppercase;
+    animation: fadeIn 0.8s 0.9s ease both;
+  }
+
+  /* Botanical SVG decoration */
+  .botanical-deco {
+    position: fixed;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0.06;
+  }
+  .botanical-deco.top-left { top: -60px; left: -60px; width: 300px; transform: rotate(-20deg); }
+  .botanical-deco.bottom-right { bottom: -60px; right: -60px; width: 280px; transform: rotate(160deg); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Hover glow behind cards */
+  .cards-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .cards-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(ellipse at center, rgba(200,168,75,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Pinterest tip */
+  .pinterest-tip {
+    width: 100%;
+    margin-top: 0;
+    padding: 14px 20px;
+    background: transparent;
+    border: 1px dashed #2A2820;
+    font-size: 0.65rem;
+    color: #3A3820;
+    text-align: center;
+    letter-spacing: 0.08em;
+    animation: fadeIn 1s 1s ease both;
+  }
+
+  .pinterest-tip a {
+    color: var(--gold-dim);
+    text-decoration: none;
+  }
+
+  @media (max-width: 480px) {
+    .logo-title { font-size: 2.3rem; }
+    .card { padding: 16px 18px; gap: 14px; }
+    .card-icon { width: 38px; height: 38px; font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Botanical background decoration -->
+<div class="botanical-deco top-left">
+  <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#C8A84B" stroke-width="0.8">
+    <line x1="150" y1="400" x2="150" y2="50"/>
+    <ellipse cx="150" cy="80" rx="40" ry="70" transform="rotate(-30 150 80)"/>
+    <ellipse cx="150" cy="80" rx="40" ry="70" transform="rotate(30 150 80)"/>
+    <ellipse cx="150" cy="160" rx="35" ry="60" transform="rotate(-50 150 160)"/>
+    <ellipse cx="150" cy="160" rx="35" ry="60" transform="rotate(50 150 160)"/>
+    <ellipse cx="150" cy="240" rx="28" ry="45" transform="rotate(-70 150 240)"/>
+    <ellipse cx="150" cy="240" rx="28" ry="45" transform="rotate(70 150 240)"/>
+    <circle cx="150" cy="50" r="8"/>
+  </svg>
+</div>
+
+<div class="botanical-deco bottom-right">
+  <svg viewBox="0 0 280 380" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#C8A84B" stroke-width="0.8">
+    <line x1="140" y1="380" x2="140" y2="30"/>
+    <ellipse cx="140" cy="60" rx="45" ry="65" transform="rotate(-25 140 60)"/>
+    <ellipse cx="140" cy="60" rx="45" ry="65" transform="rotate(25 140 60)"/>
+    <ellipse cx="140" cy="150" rx="38" ry="55" transform="rotate(-45 140 150)"/>
+    <ellipse cx="140" cy="150" rx="38" ry="55" transform="rotate(45 140 150)"/>
+    <circle cx="140" cy="30" r="6"/>
+    <circle cx="140" cy="24" r="3"/>
+  </svg>
+</div>
+
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<div class="wrapper">
+
+  <div class="ornament"></div>
+
+  <div class="logo-area">
+    <div class="logo-eyebrow">Botanical Wall Art</div>
+    <div class="logo-title">Witchfinder's<br>Cabinet</div>
+    <div class="logo-subtitle">Pressed flowers & dark botanicals for your walls</div>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-glyph">⬥</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="section-label">Choose your format</div>
+
+  <div class="cards-wrap">
+    <div class="cards">
+
+      <!-- Payhip -->
+      <a class="card" href="https://payhip.com/witchfinderscabinet" target="_blank" rel="noopener">
+        <div class="card-icon">⬇</div>
+        <div class="card-text">
+          <div class="card-platform">Payhip · Digital</div>
+          <div class="card-title">Download Print Files</div>
+          <div class="card-desc">Instant digital download — print at home or at a local shop</div>
+        </div>
+        <div class="card-badge badge-digital">PDF · PNG</div>
+        <div class="card-arrow">→</div>
+      </a>
+
+      <!-- Artpal -->
+      <a class="card" href="https://www.artpal.com/witchfinderscabinet" target="_blank" rel="noopener">
+        <div class="card-icon">🖨</div>
+        <div class="card-text">
+          <div class="card-platform">Artpal · Printed</div>
+          <div class="card-title">Order Printed Artwork</div>
+          <div class="card-desc">Museum-quality prints shipped directly to your door</div>
+        </div>
+        <div class="card-badge badge-print">Ship · Framed</div>
+        <div class="card-arrow">→</div>
+      </a>
+
+      <!-- Ko-fi -->
+      <a class="card" href="https://ko-fi.com/witchfinderscabinet" target="_blank" rel="noopener">
+        <div class="card-icon">☕</div>
+        <div class="card-text">
+          <div class="card-platform">Ko-fi · Support</div>
+          <div class="card-title">Support the Creator</div>
+          <div class="card-desc">Help keep the cabinet stocked — every cup counts</div>
+        </div>
+        <div class="card-badge badge-support">Tip · Monthly</div>
+        <div class="card-arrow">→</div>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="kofi-note">
+    All artwork is hand-curated and botanically inspired.<br>
+    <strong>Buying or tipping</strong> directly supports an independent creator — thank you. 🌿
+  </div>
+
+  <div class="footer-ornament">
+    <div class="footer-ornament-line"></div>
+    <div class="footer-ornament-text">Witchfinder's Cabinet</div>
+    <div class="footer-ornament-line"></div>
+  </div>
+
+  <div class="footer-text">Botanical Wall Art · Est. 2024</div>
+
+  <div class="pinterest-tip" style="margin-top:20px;">
+    Found via Pinterest? Save this pin to your board 📌
+  </div>
+
+</div>
+
+<script>
+  // Subtle parallax on botanical decorations
+  document.addEventListener('mousemove', (e) => {
+    const x = (e.clientX / window.innerWidth - 0.5) * 12;
+    const y = (e.clientY / window.innerHeight - 0.5) * 12;
+    document.querySelectorAll('.botanical-deco').forEach((el, i) => {
+      const dir = i === 0 ? 1 : -1;
+      el.style.transform = `translate(${x * dir * 0.3}px, ${y * dir * 0.3}px) rotate(${i === 0 ? -20 : 160}deg)`;
+    });
+  });
+
+  // Click ripple on cards
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      const rect = card.getBoundingClientRect();
+      ripple.style.cssText = `
+        position:absolute; border-radius:50%;
+        width:10px; height:10px;
+        background:rgba(200,168,75,0.3);
+        left:${e.clientX - rect.left - 5}px;
+        top:${e.clientY - rect.top - 5}px;
+        transform:scale(0); pointer-events:none;
+        animation:ripple 0.5s ease-out forwards;
+      `;
+      card.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 500);
+    });
+  });
+
+  const style = document.createElement('style');
+  style.textContent = `@keyframes ripple { to { transform:scale(30); opacity:0; } }`;
+  document.head.appendChild(style);
+</script>
+</body>
+</html>
